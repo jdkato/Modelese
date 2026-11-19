@@ -1,0 +1,57 @@
+# Sentence after sentence opening on the same word: "It is… It also… It
+# can…".
+#
+# On held-out HC3 answers it fires on 1.7% of the human ones and 8% of the
+# model's.
+extends: script
+message: "Too many sentences start the same way. Vary the openings."
+level: suggestion
+scope: summary
+script: |
+  text := import("text")
+  fmt := import("fmt")
+
+  matches := []
+
+  counts := {}
+  total := 0
+  for s in text.re_split(`[.!?]+["')\]]*\s+`, scope, -1) {
+    found := text.re_find(`[A-Za-z0-9']+`, s, 1)
+    if !is_undefined(found) && len(found) > 0 {
+      word := text.to_lower(found[0][0].text)
+      counts[word] = is_undefined(counts[word]) ? 1 : counts[word] + 1
+      total += 1
+    }
+  }
+
+  // Six sentences is the fewest the measure was taken on.
+  if total >= 6 {
+    top := ""
+    most := 0
+    for word, n in counts {
+      if n > most || (n == most && word < top) {
+        top = word
+        most = n
+      }
+    }
+
+    if most * 100 >= total * 45 {
+      first := text.fields(scope)[0]
+      matches = append(matches, {
+        begin: 0,
+        end: len(first),
+        message: fmt.sprintf("%d of %d sentences start with '%s'. Vary the openings.", most, total, top)
+      })
+    }
+  }
+
+tests:
+  - name: fires
+    input: |
+      The cache holds every response for one hour. The server checks the cache before each request. The client sends a header with each request. The header names the version of the cache. The server compares the version with its own. The server returns the cached response on a match.
+    want: |
+      1:1:Modelese.SameStart:6 of 6 sentences start with 'the'. Vary the openings.
+  - name: clean
+    input: |
+      The cache is cold. Nobody warmed it after the deploy, so the first request for each key goes all the way to the database and takes about two seconds. Warm it. A script in the repo does that in under a minute, and the deploy job can call it. After that, requests are fast. That is the whole fix.
+    want: ""

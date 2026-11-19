@@ -1,0 +1,57 @@
+# Sentences that all run to about the same length. A person's vary: a short
+# one lands a point, a long one carries a qualification.
+#
+# On held-out HC3 answers it fires on 2.0% of the human ones and 13% of the
+# model's.
+extends: script
+message: "Sentence lengths barely vary. Mix short and long."
+level: suggestion
+scope: summary
+script: |
+  text := import("text")
+  math := import("math")
+  fmt := import("fmt")
+
+  matches := []
+
+  lens := []
+  for s in text.re_split(`[.!?]+["')\]]*\s+`, scope, -1) {
+    n := len(text.fields(s))
+    if n > 0 {
+      lens = append(lens, n)
+    }
+  }
+
+  // Six sentences is the fewest the measure was taken on.
+  if len(lens) >= 6 {
+    sum := 0.0
+    for n in lens {
+      sum += n
+    }
+    mean := sum / len(lens)
+
+    spread := 0.0
+    for n in lens {
+      spread += (n - mean) * (n - mean)
+    }
+
+    if math.sqrt(spread / len(lens)) / mean <= 0.25 {
+      first := text.fields(scope)[0]
+      matches = append(matches, {
+        begin: 0,
+        end: len(first),
+        message: fmt.sprintf("%d sentences, all near %d words. Mix short and long.", len(lens), int(mean + 0.5))
+      })
+    }
+  }
+
+tests:
+  - name: fires
+    input: |
+      The cache holds every response for one hour. The server checks the cache before each request. The client sends a header with each request. The header names the version of the cache. The server compares the version with its own. The server returns the cached response on a match.
+    want: |
+      1:1:Modelese.Monotone:6 sentences, all near 8 words. Mix short and long.
+  - name: clean
+    input: |
+      The cache is cold. Nobody warmed it after the deploy, so the first request for each key goes all the way to the database and takes about two seconds. Warm it. A script in the repo does that in under a minute, and the deploy job can call it. After that, requests are fast. That is the whole fix.
+    want: ""

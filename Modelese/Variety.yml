@@ -1,0 +1,27 @@
+# An answer that says the answer varies. "A variety of factors" and "it
+# depends on your situation" are true of everything, so they tell the reader
+# nothing about this.
+#
+# On held-out HC3 answers it fires on 1.2% of the human ones and 17% of the
+# model's.
+extends: existence
+message: "'%s' says the answer varies. Name the factors that decide it."
+level: warning
+ignorecase: true
+tokens:
+  - 'a (?:variety|number|range) of (?:factors|reasons|ways|things|different)'
+  - '(?:depends?|depending|will depend) on (?:a variety|several|many|a number)'
+  - 'can vary (?:depending|based|widely|greatly|significantly)'
+  - 'specific (?:circumstances|situation|needs|goals)'
+  - 'individual (?:circumstances|situation|needs)'
+
+tests:
+  - name: fires
+    input: |
+      The rate depends on a variety of factors.
+    want: |
+      1:10:Modelese.Variety:'depends on a variety' says the answer varies. Name the factors that decide it.
+  - name: clean
+    input: |
+      The rate depends on your credit score and the loan term.
+    want: ""

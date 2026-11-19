@@ -1,0 +1,5 @@
+.DS_Store
+corpus/
+Modelese.zip
+dist/
+__pycache__/

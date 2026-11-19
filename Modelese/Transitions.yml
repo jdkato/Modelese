@@ -1,0 +1,48 @@
+# One sentence in five opening on a transition. A person lets most sentences
+# follow from the one before without announcing how.
+#
+# On held-out HC3 answers it fires on 2.2% of the human ones and 23% of the
+# model's.
+extends: script
+message: "Too many sentences open with a transition. Let them follow on."
+level: suggestion
+scope: summary
+script: |
+  text := import("text")
+  fmt := import("fmt")
+
+  matches := []
+
+  opener := `(?i)^\W*(however|moreover|furthermore|additionally|overall|in addition|in conclusion|in summary|it is important to|it's important to|on the other hand|as a result|for example|therefore|ultimately|in general|specifically)\b`
+
+  total := 0
+  opened := 0
+  for s in text.re_split(`[.!?]+["')\]]*\s+`, scope, -1) {
+    if len(text.fields(s)) > 0 {
+      total += 1
+      if text.re_match(opener, s) {
+        opened += 1
+      }
+    }
+  }
+
+  // Eighty words is the fewest the measure was taken on.
+  if len(text.fields(scope)) >= 80 && opened * 5 >= total {
+    first := text.fields(scope)[0]
+    matches = append(matches, {
+      begin: 0,
+      end: len(first),
+      message: fmt.sprintf("%d of %d sentences open with a transition. Let them follow on.", opened, total)
+    })
+  }
+
+tests:
+  - name: fires
+    input: |
+      The cache holds every response for one hour, which keeps the database quiet during the busiest part of the day. However, a deploy clears it. Additionally, nobody warms it afterward, so the first request for each key is slow. Therefore, the page takes two full seconds to load right after a release goes out. Overall, the fix is a script that warms the cache, and the deploy job can call it once the new version is serving traffic for everyone.
+    want: |
+      1:1:Modelese.Transitions:4 of 5 sentences open with a transition. Let them follow on.
+  - name: clean
+    input: |
+      The cache is cold. Nobody warmed it after the deploy, so the first request for each key goes all the way to the database and takes about two seconds. Warm it. A script in the repo does that in under a minute, and the deploy job can call it. After that, requests are fast. That is the whole fix.
+    want: ""

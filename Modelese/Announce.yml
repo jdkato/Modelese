@@ -1,0 +1,24 @@
+# Announcing a list before giving it. A person starts the list.
+#
+# On held-out HC3 answers it fires on 1.9% of the human ones and 23% of the
+# model's.
+extends: existence
+message: "'%s' announces a list. Start it."
+level: warning
+ignorecase: true
+tokens:
+  - 'here are (?:a few|some|several|the)'
+  - 'there are (?:several|a few|a number of|many|various|a variety of)(?: [a-z]+){0,2} (?:ways|things|steps|reasons|options|factors|types|possible|potential|different)'
+  - '(?:some|a few) (?:steps|things|options) you can'
+  - 'steps you can take'
+
+tests:
+  - name: fires
+    input: |
+      Here are a few things to check.
+    want: |
+      1:1:Modelese.Announce:'Here are a few' announces a list. Start it.
+  - name: clean
+    input: |
+      Check the cache first, then the logs.
+    want: ""

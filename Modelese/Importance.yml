@@ -1,0 +1,27 @@
+# A sentence that says something matters instead of saying it. The reader is
+# told to note, remember, or consider, and the thing itself comes second.
+#
+# On held-out HC3 answers it fires on 1.5% of the human ones and 45% of the
+# model's.
+extends: existence
+message: "'%s' announces a point. State the point."
+level: warning
+ignorecase: true
+tokens:
+  - 'it(?:''s| is)(?: also| always| generally)? important to'
+  - 'important to note'
+  - 'important to keep in mind'
+  - 'worth noting that'
+  - 'carefully consider'
+  - 'keep in mind that'
+
+tests:
+  - name: fires
+    input: |
+      It's important to note that the cache is cold.
+    want: |
+      1:1:Modelese.Importance:'It's important to' announces a point. State the point.
+  - name: clean
+    input: |
+      The cache is cold.
+    want: ""

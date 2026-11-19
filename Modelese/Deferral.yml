@@ -1,0 +1,26 @@
+# Handing the question to a professional. A person who knows the answer gives
+# it; a model closes by sending the reader to an advisor, a provider, or an
+# expert it never names.
+#
+# On held-out HC3 answers it fires on 0.5% of the human ones and 25% of the
+# model's.
+extends: existence
+message: "'%s' hands the question off. Say what you know, or who to ask and why."
+level: error
+ignorecase: true
+tokens:
+  - '(?:consult|speak|talk|check)(?: with)? (?:a|an|your)(?: [a-z-]+){1,2} (?:provider|professional|advisor|adviser|expert|specialist)'
+  - 'it(?:''s| is)(?: always| also| generally)? a good idea to'
+  - 'seek(?:ing)? (?:professional|medical|legal|expert) (?:advice|help|attention)'
+  - 'before making (?:a|any)(?: [a-z]+){0,2} decisions?'
+
+tests:
+  - name: fires
+    input: |
+      Speak with a financial advisor before you sign.
+    want: |
+      1:1:Modelese.Deferral:'Speak with a financial advisor' hands the question off. Say what you know, or who to ask and why.
+  - name: clean
+    input: |
+      Ask the lender for the fee schedule before you sign.
+    want: ""

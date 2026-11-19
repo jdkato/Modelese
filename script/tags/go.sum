@@ -1,0 +1,4 @@
+github.com/jdkato/prose/v3 v3.3.1 h1:LURqj290T6nPgtDRZWozHk0VwxFRP3wxNGljNCxXhM8=
+github.com/jdkato/prose/v3 v3.3.1/go.mod h1:nPWUYnf5cl04JHq+eNftwpVl7ZfMpTufT4A4QPhoWIM=
+gopkg.in/neurosnap/sentences.v1 v1.0.6 h1:v7ElyP020iEZQONyLld3fHILHWOPs+ntzuQTNPkul8E=
+gopkg.in/neurosnap/sentences.v1 v1.0.6/go.mod h1:YlK+SN+fLQZj+kY3r8DkGDhDr91+S3JmTb5LSxFRQo0=

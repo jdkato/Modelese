@@ -1,0 +1,28 @@
+# The paragraph a model adds at the end to sum up, apologize, or offer more.
+#
+# On held-out HC3 answers it fires on 1.2% of the human ones and 16% of the
+# model's.
+extends: existence
+message: "'%s' wraps up. End on the last point."
+level: warning
+ignorecase: true
+tokens:
+  - 'overall(?=,)'
+  - 'ultimately, (?:the|it|this)'
+  - 'in summary(?=,)'
+  - 'in conclusion(?=,)'
+  - 'i hope this helps'
+  - 'if you have any (?:other |further |more )?(?:questions|concerns)'
+  - 'i''m sorry (?:to hear|you)'
+  - 'in the meantime(?=,)'
+
+tests:
+  - name: fires
+    input: |
+      Overall, the cache is the cause.
+    want: |
+      1:1:Modelese.Wrap:'Overall' wraps up. End on the last point.
+  - name: clean
+    input: |
+      The cache is the cause.
+    want: ""
