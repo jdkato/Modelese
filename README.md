@@ -12,6 +12,8 @@ Every rule here was found by measurement and ships with its numbers.
 
 ## Install
 
+> Modelese requires Vale v3.23.0 or later.
+
 ```ini
 Packages = https://github.com/jdkato/Modelese/releases/latest/download/Modelese.zip
 
