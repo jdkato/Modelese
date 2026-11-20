@@ -1,0 +1,26 @@
+# A commit message, pull request, or issue that describes itself: "This commit
+# introduces", "The changes made". A person writes what was done.
+#
+# On pre-2022 pull requests and commit messages it fires on 2.7% and 1.4% of
+# the human ones. On four local models' versions of the same, it fires on 76%
+# to 98% of the pull requests and 60% to 73% of the commit messages.
+extends: existence
+message: "'%s' narrates the change. Say what it does."
+level: warning
+ignorecase: true
+tokens:
+  - 'this (?:pull request|PR|commit|change|patch) (?:addresses|introduces|aims|proposes|seeks|is a|will|ensures|enhances|resolves an issue)'
+  - 'the changes (?:made|include|introduced|in this)'
+  - 'the proposed (?:change|changes|solution|fix|implementation)'
+  - 'to (?:address|fix|resolve) this(?: issue)?(?=,)'
+
+tests:
+  - name: fires
+    input: |
+      This commit introduces a retry for the cache.
+    want: |
+      1:1:Modelese.Narration:'This commit introduces' narrates the change. Say what it does.
+  - name: clean
+    input: |
+      Retry the cache read once before failing.
+    want: ""

@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 """Ranks phrases by how much more often model answers use them than human ones.
 
-    python3 script/mine.py [--kind phrase|opener|closer] [--min 0.01] [--top 80]
+    python3 script/mine.py [--kind phrase|opener|closer] [--min 0.01] [--top 80] [--corpus train]
 
-Counts are of documents, not occurrences, on corpus/train only: a phrase one
+Counts are of documents, not occurrences, on corpus/train unless --corpus
+names another (issues, prs, commits): a phrase one
 answer repeats ten times is one answer's habit. A candidate has to appear in
 at least --min of model documents, and is ranked by the ratio of the two
 rates (with one document added to each side, so a phrase no human used does
@@ -22,13 +23,13 @@ import re
 import sys
 
 args = sys.argv[1:]
-opt = {"--kind": "phrase", "--min": "0.01", "--top": "80"}
+opt = {"--kind": "phrase", "--min": "0.01", "--top": "80", "--corpus": "train"}
 while args:
     opt[args[0]] = args[1]
     args = args[2:]
 kind, floor, top = opt["--kind"], float(opt["--min"]), int(opt["--top"])
 
-root = pathlib.Path(__file__).resolve().parent.parent / "corpus" / "train"
+root = pathlib.Path(__file__).resolve().parent.parent / "corpus" / opt["--corpus"]
 WORD = re.compile(r"[a-z0-9]+(?:['’][a-z]+)?")
 SENT = re.compile(r'(?<=[.!?])["\')\]]*\s+')
 

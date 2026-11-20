@@ -42,6 +42,16 @@ model answers to the same questions.
 | `Helpers` | "This can help", "it may be helpful to" | 1.3% | 13% |
 | `SameStart` | Close to half of the sentences opening on one word | 1.7% | 8% |
 
+Two rules are for commit messages, pull requests, and issues. Their rates are
+on pre-2022 human text and on four local models' versions of the same
+documents. The rules were written from one model's text and measured on text
+they were not written from.
+
+| Rule | Flags | Human | Model |
+| ---- | ----- | ----: | ----: |
+| `Narration` | "This commit introduces", "The changes made" | 0% to 2.7% | 60% to 98% of commits and pull requests |
+| `Pitch` | "improve the overall", "aims to", "ensures that the" | 1.3% to 4.0% | 57% to 87% of commits and pull requests, 29% to 63% of issues |
+
 ## As a detector
 
 Add up a document's alerts and the style is a detector. On 2,601 human and
@@ -87,13 +97,23 @@ What the numbers do not cover:
   5% threshold flags 10% of pre-2022 GitHub issues and 22% of commit messages.
   With a few hundred of each added to training as human text, it flags 2% to
   3% of the ones held out.
-- **Model text inside those registers.** Scored against a small local model's
-  versions of real issues, it catches 59% at 5% false positives, on 80
-  documents.
+- **Model text inside those registers.** `script/registers.py --paired` holds
+  one local generator out of training at a time and scores its versions of
+  real issues, pull requests, and commit messages. At 5% false positives:
+
+  | Held out | Issues | Pull requests | Commits |
+  | -------- | -----: | ------------: | ------: |
+  | Llama 3.2 3B | 59% | 73% | 88% |
+  | Qwen 2.5 3B | 90% | 74% | 86% |
+  | Gemma 2 2B | 65% | 71% | 92% |
+  | Phi 3.5 mini | 81% | 86% | 100% |
+
+  These are small local models and 27 to 67 documents a cell. The figures
+  say nothing yet about larger hosted models.
 
 `script/export.py` writes the score as data for a page to compute, without
-the tagger's features and with small word tables: 78.3% on RAID and 91.4% on
-HC3.
+the tagger's features and with small word tables. It catches 84.9% of the
+benchmarks' held-out model text at 5% false positives, and 70.6% at 1%.
 
 ## How the rules are made
 
@@ -106,6 +126,7 @@ separates the two sides is a habit and not a subject.
 $ python3 script/corpus.py     # fetch HC3 and split it into train and test
 $ python3 script/raid.py       # sample RAID across its eight domains
 $ python3 script/github.py     # pre-2022 issues, pull requests, and commits
+$ python3 script/generate.py   # a local model's versions of the same
 $ python3 script/mine.py       # rank phrases by model rate over human rate, on train
 $ python3 script/bench.py "Modelese=$PWD:Modelese"   # score the style, on test
 $ python3 script/model.py      # fit and score the measured features

@@ -1,0 +1,34 @@
+# A change sold instead of described: it improves the overall something,
+# ensures that the something, and breaks nothing. A person names what changed
+# and leaves the reader to judge it.
+#
+# On pre-2022 pull requests, commit messages, and issues it fires on 4.0%,
+# 1.8%, and 1.3% of the human ones. On four local models' versions of the
+# same, it fires on 57% to 87% of the pull requests, 59% to 83% of the commit
+# messages, and 29% to 63% of the issues.
+extends: existence
+message: "'%s' sells the change. Say what changed."
+level: warning
+ignorecase: true
+tokens:
+  - 'improv(?:e|es|ing) the overall'
+  - 'the overall (?:performance|quality|reliability|stability|user experience|maintainability|readability|efficiency)'
+  - '(?:does|do|will|should) not (?:introduce any|affect (?:the|any) existing)'
+  - 'aims to'
+  - 'ensur(?:e|es|ing) that the'
+  - 'the current implementation'
+  - '(?:a|is|be|and) more (?:robust|efficient|maintainable|reliable|accurate)'
+  - 'user experience'
+  - 'mak(?:e|es|ing) it easier'
+  - 'can lead to'
+
+tests:
+  - name: fires
+    input: |
+      The retry aims to keep reads working.
+    want: |
+      1:11:Modelese.Pitch:'aims to' sells the change. Say what changed.
+  - name: clean
+    input: |
+      The retry keeps reads working when the cache is cold.
+    want: ""

@@ -168,10 +168,14 @@ def load(spec):
                 row = json.loads(line)
                 tags[row["name"]] = row["tags"]
         for p in sorted((root / name / label).glob("*.md")):
-            if half and int(hashlib.sha1(p.name.encode()).hexdigest()[:2], 16) % 2 != int(half):
+            # A generated document splits with the human one it is paired to.
+            pair, _, local = p.stem.partition("~")
+            if half and int(hashlib.sha1((pair + ".md").encode()).hexdigest()[:2], 16) % 2 != int(half):
                 continue
             text = p.read_text(encoding="utf-8")
-            generator = "human" if label == "human" else re.sub(r"^[a-z_]+-(.*)-[0-9a-f]{8}-.*$", r"\1", p.name)
+            generator = "human" if label == "human" else local or re.sub(r"^[a-z_]+-(.*)-[0-9a-f]{8}-.*$", r"\1", p.name)
+            if generator == p.name:
+                generator = "llama"  # generate.py's first model, which adds no suffix
             docs.append((label, generator, dense(text, tags.get(p.name, [])), grams(text)))
     CACHE[key] = docs
     return docs

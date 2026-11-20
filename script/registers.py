@@ -52,23 +52,28 @@ if "--paired" not in sys.argv:
 
 
 def paired():
-    """The registers' own model side (generate.py), which no training here saw.
+    """Each local generator in turn, held out of training (generate.py).
 
-    The human half that was held out sets each register's 5% threshold, and
-    the generated documents in that register are scored against it: the
-    catch rate inside a register, on a generator the model never met.
+    Half of every register's human text and half of the other generators'
+    versions go into training with the benchmarks. The held-out generator's
+    documents in the other half are then scored against that half's human
+    text, at the register's own 5% and 1% thresholds: the catch rate inside
+    a register, on a generator the model never met.
     """
-    train = benchmarks + [d for name in REGISTERS for d in model.load(name + ":0") if d[0] == "human"]
-    score, _ = model.fit(train, model.ALL)
-    print("\n-- inside each register: its held-out humans against a local model's versions of the same")
-    print(f"{'register':10} {'human':>6} {'model':>6} {'caught at 5% FP':>16} {'caught at 1% FP':>16}")
-    for name in REGISTERS:
-        human = sorted(score(d, g) for label, _, d, g in model.load(name + ":1") if label == "human")
-        generated = [score(d, g) for label, _, d, g in model.load(name) if label == "model"]
-        if not generated:
-            continue
-        at = lambda fpr: sum(1 for s in generated if s > human[min(len(human) - 1, int((1 - fpr) * len(human)))]) / len(generated)
-        print(f"{name:10} {len(human):6} {len(generated):6} {at(0.05):16.1%} {at(0.01):16.1%}", flush=True)
+    half = {(name, h): model.load(f"{name}:{h}") for name in REGISTERS for h in "01"}
+    generators = sorted({g for docs in half.values() for label, g, *_ in docs if label == "model"})
+    print("\n-- inside each register: its held-out humans against one generator's versions of the same")
+    print(f"{'held out':10} {'register':9} {'human':>6} {'model':>6} {'caught at 5% FP':>16} {'caught at 1% FP':>16}")
+    for out in generators + ["none"]:
+        train = benchmarks + [d for (_, h), docs in half.items() if h == "0" for d in docs if d[1] != out]
+        score, _ = model.fit(train, model.ALL)
+        for name in REGISTERS:
+            human = sorted(score(d, g) for label, _, d, g in half[name, "1"] if label == "human")
+            generated = [score(d, g) for label, gen, d, g in half[name, "1"] if label == "model" and out in (gen, "none")]
+            if not generated:
+                continue
+            at = lambda fpr: sum(1 for s in generated if s > human[min(len(human) - 1, int((1 - fpr) * len(human)))]) / len(generated)
+            print(f"{out:10} {name:9} {len(human):6} {len(generated):6} {at(0.05):16.1%} {at(0.01):16.1%}", flush=True)
 
 
 paired()
